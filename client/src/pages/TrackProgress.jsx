@@ -27,7 +27,7 @@ const TrackProgress = () => {
     };
 
     fetchComplaints();
-  }, [token]); // ✅ Remove `issues` to avoid infinite re-renders
+  }, [token]); 
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">

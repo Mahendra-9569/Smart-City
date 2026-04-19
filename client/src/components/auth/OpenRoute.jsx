@@ -1,17 +1,12 @@
+import { Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-import { Navigate } from 'react-router-dom';
-import {useSelector } from "react-redux"
-
-
-const OpenRoute = ({children}) => {
-  const token=useSelector((state)=>state.auth.token);
-  if(token!=null){
-    return <Navigate to="/" replace/>;
+const OpenRoute = ({ children }) => {
+  const token = useSelector((state) => state.auth.token);
+  if (token != null) {
+    return <Navigate to="/report" replace />;
   }
-  else{
-     return children;
-  }
-}
+  return children;
+};
 
-
-export default OpenRoute
+export default OpenRoute;

@@ -2,24 +2,19 @@ import { useState } from "react";
 
 const FeedbackForm = () => {
   const [reason, setReason] = useState("");
-  
   const handleSubmit = () => {
     if ( !reason) {
         alert("Please fill in feedback before submitting.");
         return;
       }
-    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=mayankmonu9182j@gmail.com&su=UserFeedback&body=Email:mayankmonu9182j@gmail.com%0D%0AFeedback: ${encodeURIComponent(reason)}`;
-
+    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=mahanedrayadav37104@gmail.com&su=UserFeedback&body=Email:mahendrayadav37104@gmail.com%0D%0AFeedback: ${encodeURIComponent(reason)}`;
     window.open(gmailComposeUrl, "_blank");
     setReason("");
-
-
   };
 
   return (
     <div className="flex justify-center items-center py-10 bg-[#f3f5f6]">
       <div 
-       
         className="bg-blue-100   shadow-lg shadow-slate-500 rounded-2xl p-10 w-[40%]"
       >
         <h2 className="text-xl font-bold text-center">Share Your Thoughts</h2>
@@ -41,7 +36,6 @@ const FeedbackForm = () => {
           </button>
         </div>
       </div>
-
       
     </div>
   );

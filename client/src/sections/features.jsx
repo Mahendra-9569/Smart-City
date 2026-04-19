@@ -1,7 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-// Card component with flexible styling
 const Card = ({ children, color, rotation, className = "" }) => {
   return (
     <motion.div
@@ -14,7 +13,6 @@ const Card = ({ children, color, rotation, className = "" }) => {
   );
 };
 
-// Features component with vertical layout and animations
 const Features = () => {
   const items = [
     {
@@ -69,11 +67,9 @@ const Features = () => {
   );
 };
 
-// Main App component with responsive layout
 export default function App() {
   return (
     <div className="p-6 flex flex-col md:flex-row">
-      {/* Left Side - Images */}
       <div className="flex flex-col items-center space-y-6 md:w-1/2">
         <Card color="bg-[#f3f4f6]" rotation="-6deg" className="w-64">
           <img src="/pic1.webp" alt="Progress" className="w-full h-auto rounded-lg" />
@@ -85,7 +81,6 @@ export default function App() {
           <img src="/pic2.webp" alt="Calendar" className="w-full h-auto rounded-lg" />
         </Card>
       </div>
-      {/* Right Side - Features */}
       <div className="md:w-1/2 mt-12 md:mt-0 md:ml-12">
         <Features />
       </div>

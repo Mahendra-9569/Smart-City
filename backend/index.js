@@ -85,7 +85,7 @@ io.on("connection", (socket) => {
     } 
     else {
       try {
-        // Personalized Gemini prompt
+      
         const prompt = `
         You are a chatbot for a Smart City service, assisting users with issues like road damage, water leakage, power outages, and public services.
         The user has reported the following pending issues: 

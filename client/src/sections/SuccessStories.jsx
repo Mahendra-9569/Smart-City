@@ -26,32 +26,28 @@ const successStories = [
 
 const SuccessStories = () => {
   const sliderRef = useRef(null);
-  const LOOP_COUNT = 10; // 10 sets for smooth looping without overloading the DOM
+  const LOOP_COUNT = 10; 
 
   useEffect(() => {
     const slider = sliderRef.current;
     if (!slider) return;
 
     let animationFrameId;
-    const scrollAmount = window.innerWidth < 768 ? 0.5 : 1; // Responsive scroll speed
+    const scrollAmount = window.innerWidth < 768 ? 0.5 : 1;
 
-    // Calculate the width of one set of stories
-    const cardWidth = slider.children[0].offsetWidth; // Width of one card
-    const space = window.innerWidth < 768 ? 16 : 24; // space-x-4 (16px) or space-x-6 (24px)
-    const storiesPerSet = successStories.length; // Number of stories in one set (4)
-    const widthPerSet = (storiesPerSet * cardWidth) + ((storiesPerSet - 1) * space); // Total width of one set
+    const cardWidth = slider.children[0].offsetWidth; 
+    const space = window.innerWidth < 768 ? 16 : 24; 
+    const storiesPerSet = successStories.length; 
+    const widthPerSet = (storiesPerSet * cardWidth) + ((storiesPerSet - 1) * space); 
 
     const smoothScroll = () => {
       slider.scrollLeft += scrollAmount;
       if (slider.scrollLeft >= widthPerSet) {
-        slider.scrollLeft -= widthPerSet; // Reset by one set's width for seamless looping
+        slider.scrollLeft -= widthPerSet; 
       }
       animationFrameId = requestAnimationFrame(smoothScroll);
     };
-
     animationFrameId = requestAnimationFrame(smoothScroll);
-
-    // Cleanup to prevent memory leaks
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
@@ -62,17 +58,15 @@ const SuccessStories = () => {
         Discover how our smart city solutions have improved the lives of residents by addressing key urban challenges efficiently.
       </p>
       <div className="w-full bg-[#f3f4f6] py-8 md:py-16 overflow-hidden relative">
-        {/* Gradient Fades */}
         <div className="absolute left-0 top-0 h-full w-12 md:w-24 bg-gradient-to-r from-[#f3f4f6] to-transparent z-10" />
         <div className="absolute right-0 top-0 h-full w-12 md:w-24 bg-gradient-to-l from-[#f3f4f6] to-transparent z-10" />
 
-        {/* Infinite Scrolling Container */}
+     
         <div
           ref={sliderRef}
           className="flex space-x-4 md:space-x-6 px-4 md:px-6 overflow-hidden"
-          style={{ display: "flex", flexWrap: "nowrap" }} // Ensure single row
+          style={{ display: "flex", flexWrap: "nowrap" }}
         >
-          {/* Repeating success stories */}
           {Array.from({ length: LOOP_COUNT }).flatMap(() => successStories).map((story, index) => (
             <div
               key={index}

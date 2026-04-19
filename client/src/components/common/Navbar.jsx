@@ -2,165 +2,132 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { setToken, setUser } from "../../slices/auth";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
-  const user=useSelector((state)=>state.auth.user);
-  const name=user?.name;
+  const user = useSelector((state) => state.auth.user);
+  const name = user?.name || "User";
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const logoutHandler = () => {
-    localStorage.removeItem('token');
-    dispatch(setToken(null));
-    localStorage.removeItem('user');
-    dispatch(setUser(null));
-    navigate('/login');
+  const logoutHandler = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_APP_SERVER_URL}/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+    } catch (error) {
+    
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      dispatch(setToken(null));
+      dispatch(setUser(null));
+      toast.success("Logged out successfully");
+      navigate("/login");
+    }
   };
 
-  const navigateAndCloseMenu = (path) => {
-    navigate(path);
-    setIsMenuOpen(false);
-  };
+  const avatarUrl =
+    user?.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
   return (
-    <nav className="w-full  bg-white shadow-md">
-      {/* Top Bar */}
+    <nav className="w-full bg-white shadow-md">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-        <button onClick={()=>navigate("/")} className="text-xl font-bold text-gray-900">SMART CITY</button>
 
-        {/* Desktop Navigation */}
+        <button onClick={() => navigate("/")} className="text-xl font-bold text-gray-900">
+          SMART CITY
+        </button>
+
         <div className="hidden lg:flex items-center space-x-6">
-          <button className="hover:text-blue-500 transition" onClick={() => navigate("/")}>Home</button>
-          <button className="hover:text-blue-500 transition" onClick={() => navigate("/report")}>Report Issue</button>
-          <button className="hover:text-blue-500 transition" onClick={() => navigate("/track")}>Track Status</button>
-          <button className="hover:text-blue-500 transition" onClick={() => navigate("/contact")}>Contact Us</button>
+          <button onClick={() => navigate("/")} className="hover:text-blue-500">Home</button>
+          <button onClick={() => navigate("/report")} className="hover:text-blue-500">Report Issue</button>
+          <button onClick={() => navigate("/track")} className="hover:text-blue-500">Track Status</button>
+          <button onClick={() => navigate("/contact")} className="hover:text-blue-500">Contact Us</button>
         </div>
 
-        {/* Desktop Auth Buttons */}
-        <div className="hidden lg:flex items-center space-x-3">
+        <div className="hidden lg:flex items-center space-x-4 relative">
           {!token ? (
             <>
-              <button className="text-gray-600 hover:text-blue-500 transition" onClick={() => navigate("/login")}>
+              <button onClick={() => navigate("/login")} className="hover:text-blue-500">
                 Log In
               </button>
               <button
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition"
                 onClick={() => navigate("/signup")}
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >
-                Sign up
+                Sign Up
               </button>
             </>
           ) : (
             <>
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-10 h-10 rounded-full cursor-pointer border"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              />
 
-            <img className="rounded-full w-10 h-10" src={`https://ui-avatars.com/api/?name=${name}&background=random`} alt="Avatar" />
+              {isProfileOpen && (
+                <div className="absolute right-0 top-14 w-48 bg-white shadow-lg rounded-lg border z-50">
+                  <div className="p-3 border-b">
+                    <p className="font-semibold">{name}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
 
-            
-            <button
-              className="px-4 py-2 bg-black text-white  rounded-md hover:bg-gray-200 hover:text-black  transition"
-              onClick={logoutHandler}
-            >
-              Log Out
-            </button>
-            
+                  <button
+                    onClick={logoutHandler}
+                    className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </>
-            
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <button
-          className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+          className="lg:hidden p-2"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          {isMenuOpen ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
+          ☰
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden px-4 pb-4 sm:px-6 border-t border-gray-200">
-          <div className="flex flex-col space-y-2 mt-2">
-            <button
-              className="px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-              onClick={() => navigateAndCloseMenu("/")}
-            >
-              Home
-            </button>
-            <button
-              className="px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-              onClick={() => navigateAndCloseMenu("/report")}
-            >
-              Report Issue
-            </button>
-            <button
-              className="px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-              onClick={() => navigateAndCloseMenu("/track")}
-            >
-              Track Status
-            </button>
-            <button
-              className="px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-              onClick={() => navigateAndCloseMenu("/contact")}
-            >
-              Contact Us
-            </button>
+        <div className="lg:hidden px-4 pb-4">
+          <button onClick={() => navigate("/")} className="block py-2">Home</button>
+          <button onClick={() => navigate("/report")} className="block py-2">Report Issue</button>
+          <button onClick={() => navigate("/track")} className="block py-2">Track Status</button>
+          <button onClick={() => navigate("/contact")} className="block py-2">Contact</button>
 
-            <div className="border-t border-gray-200 pt-4 mt-2">
-              {!token ? (
-                <>
-                  <button
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-                    onClick={() => navigateAndCloseMenu("/login")}
-                  >
-                    Log In
-                  </button>
-                  <button
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 rounded-md transition"
-                    onClick={() => navigateAndCloseMenu("/signup")}
-                  >
-                    Sign Up
-                  </button>
-                </>
-              ) : (
-               <>
-               <img className="flex justify-center  items-center ml-5 rounded-full w-10 h-10" src={`https://ui-avatars.com/api/?name=${name}&background=random`} alt="Avatar" />
-
-                <button
-                  className="w-full px-4 py-2 text-left hover:bg-gray-300 rounded-md transition"
-                  onClick={() => {
-                    logoutHandler();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Log Out
-                </button>
-               </>
-              )}
-            </div>
-          </div>
+          {!token ? (
+            <>
+              <button onClick={() => navigate("/login")} className="block py-2">Login</button>
+              <button onClick={() => navigate("/signup")} className="block py-2">Signup</button>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 py-3">
+                <img src={avatarUrl} className="w-10 h-10 rounded-full" />
+                <span>{name}</span>
+              </div>
+              <button onClick={logoutHandler} className="block py-2 text-red-500">
+                Logout
+              </button>
+            </>
+          )}
         </div>
       )}
     </nav>

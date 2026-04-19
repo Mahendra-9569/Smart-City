@@ -52,7 +52,6 @@ const Chatbot = () => {
 
   return (
     <div className="fixed bottom-4 right-4">
-      {/* Chat Toggle Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -62,16 +61,13 @@ const Chatbot = () => {
         </button>
       )}
 
-      {/* Chat Window */}
       {isOpen && (
         <div className="w-80 h-96 bg-white shadow-lg rounded-lg border flex flex-col">
-          {/* Header */}
           <div className="flex justify-between items-center bg-blue-600 text-white px-4 py-2 rounded-t-lg">
             <h2 className="text-lg font-semibold">Smart City Chatbot</h2>
             <button onClick={() => setIsOpen(false)} className="text-white text-xl">&times;</button>
           </div>
 
-          {/* Messages */}
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 bg-gray-100">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.user === "You" ? "justify-end" : "justify-start"} my-2`}>
@@ -82,7 +78,6 @@ const Chatbot = () => {
               </div>
             ))}
 
-            {/* Typing Indicator */}
             {isTyping && (
               <div className="flex items-center space-x-2 text-gray-600">
                 <span className="font-semibold">Bot:</span>
@@ -95,7 +90,6 @@ const Chatbot = () => {
             )}
           </div>
 
-          {/* Input Field */}
           <div className="flex items-center p-2 border-t">
             <input
               value={input}

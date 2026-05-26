@@ -138,10 +138,10 @@ function App() {
   }, [issues, filter]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-200 via-blue-100 to-blue-50 p-4 sm:p-6 text-[#000000]">
+    <div className="min-h-screen bg-linear-to-r from-blue-200 via-blue-100 to-blue-50 p-4 sm:p-6 text-[#000000]">
       <ToastContainer />
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-4 sm:p-6">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-6">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-center bg-linear-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-6">
           Admin Panel - Track Issues
         </h1>
 

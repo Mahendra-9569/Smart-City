@@ -16,7 +16,8 @@ const ReportIssues = () => {
   });
   
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  // 🛠️ FIX 1: Change message state to an object storing text and status type
+  const [message, setMessage] = useState({ text: "", type: "" });
   const [markerPosition, setMarkerPosition] = useState({ latitude: 20.5937, longitude: 78.9629 });
   const mapRef = useRef(null);
   const token = useSelector((state) => state.auth.token);
@@ -24,12 +25,12 @@ const ReportIssues = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setMessage("");
+    setMessage({ text: "", type: "" });
   };
 
   const handleFileChange = (e) => {
     setFormData((prev) => ({ ...prev, attachment: e.target.files[0] }));
-    setMessage("");
+    setMessage({ text: "", type: "" });
   };
 
   const handleLocationUpdate = (latitude, longitude) => {
@@ -44,20 +45,20 @@ const ReportIssues = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => handleLocationUpdate(position.coords.latitude, position.coords.longitude),
-        (error) => setMessage(`Location error: ${error.message}`)
+        (error) => setMessage({ text: `Location error: ${error.message}`, type: "error" })
       );
     } else {
-      setMessage("Geolocation is not supported by your browser.");
+      setMessage({ text: "Geolocation is not supported by your browser.", type: "error" });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMessage({ text: "", type: "" });
 
     if (!formData.location.latitude || !formData.location.longitude) {
-      setMessage("Please provide a location using the map or GPS.");
+      setMessage({ text: "Please provide a location using the map or GPS.", type: "error" });
       setLoading(false);
       return;
     }
@@ -74,11 +75,16 @@ const ReportIssues = () => {
         headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
       });
 
-      setMessage("Issue reported successfully!");
+      // 🛠️ FIX 2: Set type to "success" when submission is clean
+      setMessage({ text: "Issue reported successfully!", type: "success" });
       setFormData({ category: "", desc: "", attachment: null, location: { latitude: "", longitude: "" } });
       setMarkerPosition({ latitude: 20.5937, longitude: 78.9629 });
     } catch (error) {
-      setMessage(error.response?.data?.message || "An unexpected error occurred.");
+      // 🛠️ FIX 3: Set type to "error" on failure catches
+      setMessage({ 
+        text: error.response?.data?.message || "An unexpected error occurred.", 
+        type: "error" 
+      });
     } finally {
       setLoading(false);
     }
@@ -112,7 +118,16 @@ const ReportIssues = () => {
       <div className="w-full max-w-4xl bg-white shadow-lg rounded-xl text-black border border-blue-200 flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 p-6">
           <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">Report an Issue</h2>
-          {message && <p className="mb-4 text-center text-red-500 font-semibold">{message}</p>}
+          
+          {/* 🛠️ FIX 4: Dynamically apply green text if type is success, otherwise red text */}
+          {message.text && (
+            <p className={`mb-4 text-center font-semibold ${
+              message.type === "success" ? "text-green-500" : "text-red-500"
+            }`}>
+              {message.text}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="block font-medium text-gray-700">Category</label>
             <select name="category" value={formData.category} onChange={handleChange} required className="w-full p-2 border rounded-md bg-blue-50">
@@ -131,13 +146,13 @@ const ReportIssues = () => {
             <input type="file" onChange={handleFileChange} className="w-full p-2 border rounded-md bg-blue-50" />
 
             <div className="w-full block md:hidden md:w-1/2 p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-4 text-center">Location</h3>
-          <MapContainer center={[20.5937, 78.9629]} zoom={5} className="w-full h-64 md:h-72">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <LocationMarker />
-          </MapContainer>
-          <button type="button" onClick={handleGetLocation} className="w-full px-4 py-2 mt-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Current Location</button>
-        </div>
+              <h3 className="text-xl font-semibold text-blue-800 mb-4 text-center">Location</h3>
+              <MapContainer center={[20.5937, 78.9629]} zoom={5} className="w-full h-64 md:h-72">
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <LocationMarker />
+              </MapContainer>
+              <button type="button" onClick={handleGetLocation} className="w-full px-4 py-2 mt-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Current Location</button>
+            </div>
 
             <button type="submit" disabled={loading} className="w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition">
               {loading ? "Submitting..." : "Submit Issue"}
@@ -151,7 +166,8 @@ const ReportIssues = () => {
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <LocationMarker />
           </MapContainer>
-          <button onClick={handleGetLocation} className="w-full px-4 py-2 mt-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Current Location</button>
+          {/* Added type="button" here to prevent unintended form submissions inside layout wrapper */}
+          <button type="button" onClick={handleGetLocation} className="w-full px-4 py-2 mt-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Current Location</button>
         </div>
       </div>
     </div>

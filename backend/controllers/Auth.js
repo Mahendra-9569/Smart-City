@@ -5,10 +5,20 @@ import { OAuth2Client } from "google-auth-library";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const createToken = (user) =>
-  jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+// ================= UTILS & HELPERS =================
+
+const createToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+};
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -29,6 +39,8 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
+// ================= LOGIN =================
+
 export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -36,11 +48,13 @@ export const Login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required.",
+        message: "Email and password required",
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -51,11 +65,12 @@ export const Login = async (req, res) => {
     if (!user.password) {
       return res.status(400).json({
         success: false,
-        message: "This account uses Google sign-in. Please continue with Google.",
+        message: "This account uses Google sign in",
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -64,24 +79,26 @@ export const Login = async (req, res) => {
     }
 
     const token = createToken(user);
-    const safeUser = sanitizeUser(user);
 
     return res
       .cookie("token", token, cookieOptions)
       .status(200)
       .json({
         success: true,
-        message: "User logged in successfully",
+        message: "Login successful",
         token,
-        user: safeUser,
+        user: sanitizeUser(user),
       });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+// ================= SIGNUP =================
 
 export const Signup = async (req, res) => {
   try {
@@ -90,51 +107,54 @@ export const Signup = async (req, res) => {
     if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required.",
+        message: "All fields required",
       });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const userExists = await User.findOne({ email: normalizedEmail });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
-    if (userExists) {
+    if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "User already exists",
       });
     }
 
-    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
+
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Password must be at least 6 characters long and have at least 1 number, 1 symbol and 1 uppercase letter",
+        message: "Password must contain uppercase lowercase and number",
       });
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
+      name,
       email: normalizedEmail,
       password: hashPassword,
-      name,
       provider: "local",
       emailVerified: false,
     });
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "Signup successful",
       user: sanitizeUser(user),
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+// ================= GOOGLE LOGIN =================
 
 export const GoogleLogin = async (req, res) => {
   try {
@@ -143,9 +163,17 @@ export const GoogleLogin = async (req, res) => {
     if (!credential) {
       return res.status(400).json({
         success: false,
-        message: "Google credential is required.",
+        message: "Google credential missing",
       });
     }
+
+    // DEBUG TOKEN
+    const decoded = JSON.parse(
+      Buffer.from(credential.split(".")[1], "base64").toString()
+    );
+
+    console.log("TOKEN AUD:", decoded.aud);
+    console.log("EXPECTED:", process.env.GOOGLE_CLIENT_ID);
 
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
@@ -153,31 +181,23 @@ export const GoogleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
+
     if (!payload) {
       return res.status(401).json({
         success: false,
-        message: "Invalid Google token.",
+        message: "Invalid Google token",
       });
     }
 
-    const googleId = payload.sub;
     const email = (payload.email || "").toLowerCase().trim();
-
-    if (!email) {
-      return res.status(401).json({
-        success: false,
-        message: "Google account did not return an email address.",
-      });
-    }
-
-    const name = payload.name || payload.given_name || email.split("@")[0] || "Google User";
-    const avatar = payload.picture || null;
+    const googleId = payload.sub;
+    const name = payload.name || payload.given_name || "Google User";
+    const avatar = payload.picture || "";
 
     let user = await User.findOne({ email });
 
     if (user) {
-      user.name = user.name || name;
-      user.googleId = user.googleId || googleId;
+      user.googleId = googleId;
       user.avatar = avatar || user.avatar;
       user.provider = "google";
       user.emailVerified = Boolean(payload.email_verified);
@@ -195,7 +215,6 @@ export const GoogleLogin = async (req, res) => {
     }
 
     const token = createToken(user);
-    const safeUser = sanitizeUser(user);
 
     return res
       .cookie("token", token, cookieOptions)
@@ -204,22 +223,28 @@ export const GoogleLogin = async (req, res) => {
         success: true,
         message: "Google login successful",
         token,
-        user: safeUser,
+        user: sanitizeUser(user),
       });
   } catch (error) {
+    console.log("GOOGLE ERROR:", error);
     return res.status(401).json({
       success: false,
-      message: error.message || "Google sign-in failed.",
+      message: error.message || "Google auth failed",
     });
   }
 };
 
+// ================= LOGOUT =================
+
 export const Logout = async (req, res) => {
   try {
-    return res.status(200).clearCookie("token", cookieOptions).json({
-      success: true,
-      message: "User logged out successfully",
-    });
+    return res
+      .clearCookie("token", cookieOptions)
+      .status(200)
+      .json({
+        success: true,
+        message: "Logout successful",
+      });
   } catch (error) {
     return res.status(500).json({
       success: false,
